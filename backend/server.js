@@ -5,6 +5,8 @@ import cors from 'cors'
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/authRoutes.js'
+import morgan from 'morgan';
+import articleRoutes from './routes/articleRoute.js'
 
 dotenv.config();
 
@@ -16,9 +18,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
 
 
 app.use("/api/auth", authRoutes);
+app.use("/api/articles", articleRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
