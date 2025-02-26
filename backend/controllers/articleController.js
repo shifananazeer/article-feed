@@ -38,6 +38,7 @@ export const createArticle = async (req, res) => {
   export const getArticlesByUserId = async (req , res) => {
     try {
       const { userId } = req.params;
+      console.log("userId",userId)
 
       if (!mongoose.Types.ObjectId.isValid(userId)) {
         return res.status(400).json({ message: "Invalid user ID format" });
@@ -49,7 +50,7 @@ export const createArticle = async (req, res) => {
       if (!articles.length) {
         return res.status(404).json({ message: "No articles found for this user." });
       }
-  
+      console.log("arti" , articles)
       res.status(200).json({ articles });
     } catch (error) {
       console.error("Error fetching articles:", error);

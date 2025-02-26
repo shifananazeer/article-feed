@@ -7,6 +7,7 @@ import Login from './pages/Login'
 import VerifyOTP from './pages/VerifyOtp'
 import { ToastContainer } from "react-toastify";
 import ArticleCreation from './pages/ArticleCreation'
+import MyArticles from './pages/MyArticles'
 
 const App = () => {
   return (
@@ -20,6 +21,7 @@ const App = () => {
        <Route path="/login" element={<Login />} />
        <Route path='/verify-otp' element={<VerifyOTP/>}/>
        <Route path='/create' element={<ArticleCreation/>}/>
+       <Route path='/myarticle' element={<MyArticles/>}/>
         </Routes>
       </Router>
     </div>

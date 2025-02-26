@@ -7,6 +7,8 @@ import cookieParser from 'cookie-parser';
 import authRoutes from './routes/authRoutes.js'
 import morgan from 'morgan';
 import articleRoutes from './routes/articleRoute.js'
+import path from "path";
+
 
 dotenv.config();
 
@@ -19,7 +21,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // app.use(morgan('dev'));
-
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.get("/api", (req, res) => {
   res.status(200).json({ message: "API is running" });
 });

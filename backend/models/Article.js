@@ -8,6 +8,9 @@ const articleSchema = new Schema(
     tags: [{ type: String }],
     images: [{ type: String }],
     author: { type: Schema.Types.ObjectId, ref: "User", required: true }, 
+    likes:{type:Number , default:0},
+    disLikes:{type:Number , default:0},
+    blockBy:[{type: Schema.Types.ObjectId}],
     createdAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
