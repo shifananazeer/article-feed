@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../utils/axiosInstance';
 import { ThumbsUp, ThumbsDown , Edit, Trash2 } from "lucide-react"
+import Swal from "sweetalert2"; 
 
 const MyArticles = () => {
     const [articles, setArticles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingArticle, setEditingArticle] = useState(null);
 
     useEffect(() => {
         fetchArticle();
@@ -26,6 +29,106 @@ const MyArticles = () => {
             setLoading(false);
         }
     };
+
+
+
+    const handleDelete = async (articleId) => {
+        // Show SweetAlert confirmation
+        const result = await Swal.fire({
+            title: "Are you sure?",
+            text: "This action cannot be undone!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, delete it!"
+        });
+    
+        if (result.isConfirmed) {
+            try {
+                const response = await axiosInstance.delete(`/articles/dele/${articleId}`);
+    
+                if (response.data.success) {
+                    // Remove deleted article from state
+                    setArticles(prevArticles => prevArticles.filter(article => article._id !== articleId));
+    
+                    // Show success message
+                    Swal.fire("Deleted!", "Your article has been deleted.", "success");
+                } else {
+                    Swal.fire("Error!", "Failed to delete article.", "error");
+                }
+            } catch (error) {
+                console.error("Error deleting article:", error);
+                Swal.fire("Error!", "Something went wrong.", "error");
+            }
+        }
+    };
+
+    const handleEditClick = (article) => {
+        setEditingArticle({
+            ...article,
+            tags: article.tags ? article.tags.join(", ") : "", // Convert tags array to string
+            images: article.images || [], // Ensure images array exists
+        });
+        setIsModalOpen(true);
+    };
+    
+
+    const handleUpdateArticle = async () => {
+        try {
+            const formData = new FormData();
+            formData.append("title", editingArticle.title);
+            formData.append("description", editingArticle.description);
+            formData.append("category", editingArticle.category);
+            formData.append("tags", editingArticle.tags);
+            
+            // Append existing images
+            editingArticle.images.forEach((image, index) => {
+                formData.append(`existingImages[${index}]`, image);
+            });
+    
+            // Append new images
+            if (editingArticle.newImages) {
+                editingArticle.newImages.forEach((file) => {
+                    formData.append("newImages", file);
+                });
+            }
+    
+            const response = await axiosInstance.put(`/articles/update/${editingArticle._id}`, formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+    
+            if (response.data.success) {
+                setArticles((prevArticles) =>
+                    prevArticles.map((article) =>
+                        article._id === editingArticle._id ? { ...article, ...response.data.article } : article
+                    )
+                );
+    
+                setIsModalOpen(false);
+                Swal.fire("Success!", "Article updated successfully.", "success");
+            } else {
+                Swal.fire("Error!", "Failed to update article.", "error");
+            }
+        } catch (error) {
+            console.error("Error updating article:", error);
+            Swal.fire("Error!", "Something went wrong.", "error");
+        }
+    };
+    
+
+    const handleRemoveExistingImage = (index) => {
+        const updatedImages = editingArticle.images.filter((_, i) => i !== index);
+        setEditingArticle({ ...editingArticle, images: updatedImages });
+    };
+
+    
+    const handleNewImageUpload = (e) => {
+        const files = Array.from(e.target.files);
+        setEditingArticle({ ...editingArticle, newImages: files });
+    };
+    
+    
 
     if (loading) return <div className="text-center py-8">Loading...</div>;
     if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
@@ -78,7 +181,7 @@ const MyArticles = () => {
                  {/* Buttons */}
                  <div className="flex justify-end mt-4 space-x-3">
                                 <button
-                                    onClick={() => handleEdit(article._id)}
+                                   onClick={() => handleEditClick(article)} 
                                     className="text-blue-500 hover:text-blue-700 transition flex items-center space-x-1"
                                 >
                                     <Edit size={20} />
@@ -96,7 +199,91 @@ const MyArticles = () => {
                     </div>
                 ))}
             </div>
+            {isModalOpen && (
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+        <div className="bg-white p-6 rounded-lg w-96">
+            <h2 className="text-xl font-semibold mb-4">Edit Article</h2>
+
+            {/* Title */}
+            <label className="block mb-2 text-sm font-medium text-gray-700">Title</label>
+            <input
+                type="text"
+                value={editingArticle?.title || ""}
+                onChange={(e) => setEditingArticle({ ...editingArticle, title: e.target.value })}
+                className="w-full p-2 border rounded"
+            />
+
+            {/* Description */}
+            <label className="block mt-4 mb-2 text-sm font-medium text-gray-700">Description</label>
+            <textarea
+                value={editingArticle?.description || ""}
+                onChange={(e) => setEditingArticle({ ...editingArticle, description: e.target.value })}
+                className="w-full p-2 border rounded"
+            />
+
+            {/* Category Dropdown */}
+            <label className="block mt-4 mb-2 text-sm font-medium text-gray-700">Category</label>
+            <select
+                value={editingArticle?.category || ""}
+                onChange={(e) => setEditingArticle({ ...editingArticle, category: e.target.value })}
+                className="w-full p-2 border rounded"
+            >
+                <option value="Tech">Tech</option>
+                <option value="Health">Health</option>
+                <option value="Business">Business</option>
+                <option value="Lifestyle">Lifestyle</option>
+            </select>
+
+            {/* Tags (Comma-Separated) */}
+            <label className="block mt-4 mb-2 text-sm font-medium text-gray-700">Tags</label>
+            <input
+                type="text"
+                value={editingArticle?.tags || ""}
+                onChange={(e) => setEditingArticle({ ...editingArticle, tags: e.target.value })}
+                className="w-full p-2 border rounded"
+                placeholder="Enter tags separated by commas"
+            />
+
+             {/* Image Preview Section */}
+             <label className="block mt-4 mb-2 text-sm font-medium text-gray-700">Images</label>
+            <div className="flex flex-wrap gap-2">
+                {editingArticle?.images?.map((image, index) => (
+                    <div key={index} className="relative">
+                        <img src={`${import.meta.env.VITE_API_URL}/${image}`} alt="Article" className="w-20 h-20 object-cover rounded" />
+                        <button
+                            className="absolute top-0 right-0 bg-red-500 text-white text-xs px-1 rounded"
+                            onClick={() => handleRemoveExistingImage(index)}
+                        >
+                            ✖
+                        </button>
+                    </div>
+                ))}
+            </div>
+
+            {/* Upload New Images */}
+            <label className="block mt-4 mb-2 text-sm font-medium text-gray-700">Upload New Images</label>
+            <input
+                type="file"
+                multiple
+                onChange={handleNewImageUpload}
+                className="w-full p-2 border rounded"
+            />
+
+            {/* Buttons */}
+            <div className="flex justify-end mt-4">
+                <button onClick={() => setIsModalOpen(false)} className="mr-2 px-4 py-2 bg-gray-400 text-white rounded">
+                    Cancel
+                </button>
+                <button onClick={handleUpdateArticle} className="px-4 py-2 bg-blue-500 text-white rounded">
+                    Save
+                </button>
+            </div>
         </div>
+    </div>
+)}
+
+        </div>
+        
     );
 };
 
