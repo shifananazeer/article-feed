@@ -22,7 +22,7 @@ const Login = () => {
       } else {
        setIsAuthenticated(false)
       }
-    }, [navigate]);
+    }, []);
 
   // Handle input change
   const handleChange = (e) => {

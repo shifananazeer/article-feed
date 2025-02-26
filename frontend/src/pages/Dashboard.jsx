@@ -15,7 +15,7 @@ const Dashboard = () => {
       alert("Unauthorized access. Please log in.");
       navigate("/login");
     }
-  }, [navigate]);
+  }, []);
 
   return (
     <div>
