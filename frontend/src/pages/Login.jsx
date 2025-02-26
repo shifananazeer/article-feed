@@ -1,14 +1,28 @@
-import React, { useState } from "react";
+import React, { useState , useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../utils/axiosInstance"; 
+import { toast } from "react-toastify";
 
 const Login = () => {
+   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     emailOrPhone: "",
     password: "",
   });
-
   const [error, setError] = useState("");
+
+   useEffect(() => {
+      const accessToken = localStorage.getItem("accessToken");
+      const userId = localStorage.getItem("userId");
+  
+      if (accessToken && userId) {
+        setIsAuthenticated(true);
+        navigate("/");
+      } else {
+       setIsAuthenticated(false)
+      }
+    }, [navigate]);
 
   // Handle input change
   const handleChange = (e) => {
@@ -17,22 +31,34 @@ const Login = () => {
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const { emailOrPhone, password } = formData;
 
-    // Simple validation
     if (!emailOrPhone || !password) {
       setError("Please enter email/phone and password");
       return;
     }
 
-    // Placeholder for authentication logic (Replace with actual API call)
-    console.log("Logging in with:", formData);
+    try {
+      console.log("api call ......")
+      const response = await axiosInstance.post("/auth/login", { emailOrPhone, password });
 
-    // If login is successful, navigate to Dashboard
-    navigate("/dashboard");
+      const { accessToken, refreshToken, userId } = response.data;
+
+      // Store tokens & user ID in local storage
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+      localStorage.setItem("userId", userId);
+
+      toast.success("Login successful!");
+      navigate("/");
+
+    } catch (error) {
+      setError(error.response?.data?.message || "Login failed. Try again.");
+    }
   };
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">

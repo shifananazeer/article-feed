@@ -1,6 +1,20 @@
 import React from 'react'
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+
 
 const Navbar = () => {
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    // Remove tokens & user ID from local storage
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userId");
+
+    // Redirect to login page
+    navigate("/login");
+    toast.success("Logout successfully")
+  };
   return (
     <div>
          <nav className="bg-blue-900 text-white px-6 py-3 flex justify-between items-center">
@@ -16,7 +30,10 @@ const Navbar = () => {
       </div>
 
       {/* Right Side - Logout Button */}
-      <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+      <button
+        onClick={handleLogout}
+        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+      >
         Logout
       </button>
     </nav>

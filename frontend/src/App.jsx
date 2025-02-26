@@ -4,16 +4,20 @@ import Navbar from './components/Navbar'
 import Dashboard from './pages/Dashboard'
 import Register from './pages/Register'
 import Login from './pages/Login'
+import VerifyOTP from './pages/VerifyOtp'
+import { ToastContainer } from "react-toastify";
 
 const App = () => {
   return (
     <div>
       <Router>
         <ConditionalNavbar/>
+        <ToastContainer position="top-right" autoClose={3000} />
         <Routes>
-       <Route path='/dashboard' element={<Dashboard/>} />
+       <Route path='/' element={<Dashboard/>} />
        <Route path='/register' element= {<Register/>}/>
        <Route path="/login" element={<Login />} />
+       <Route path='/verify-otp' element={<VerifyOTP/>}/>
         </Routes>
       </Router>
     </div>
@@ -26,7 +30,8 @@ const ConditionalNavbar = () => {
   const location = useLocation();
   const hideNavbarRoutes = [
    '/register',
-    '/login'
+    '/login',
+    '/verify-otp'
   ];
   const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname);
 

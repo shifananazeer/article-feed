@@ -78,7 +78,7 @@ export const verifyOTP = async (req, res) => {
 export const login = async (req, res) => {
     try {
         const { emailOrPhone, password } = req.body;
-        console.log("body", emailOrPhone)
+        console.log("body", emailOrPhone , password)
 
         // Check if user exists using email or phone
         const user = await User.findOne({ 
@@ -110,9 +110,40 @@ export const login = async (req, res) => {
             sameSite: 'strict',
         });
 
-        res.status(200).json({ message: "Login successful", accessToken  , refreshToken});
+        res.status(200).json({ message: "Login successful", accessToken  , refreshToken ,userId: user._id});
 
     } catch (error) {
         res.status(500).json({ message: "Server error", error });
     }
 };
+
+export const refreshAccessToken = async (req, res) => {
+    try {
+      const { refreshToken } = req.body;
+  
+      if (!refreshToken) {
+        return res.status(401).json({ message: "Refresh token required" });
+      }
+  
+      // Verify refresh token
+      jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, decoded) => {
+        if (err) {
+          return res.status(403).json({ message: "Invalid refresh token" });
+        }
+  
+        // Find user by ID from decoded token
+        const user = await User.findById(decoded.id);
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+  
+        // Generate new tokens
+        const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
+  
+        res.status(200).json({ accessToken, refreshToken: newRefreshToken });
+      });
+  
+    } catch (error) {
+      res.status(500).json({ message: "Server error", error });
+    }
+  };

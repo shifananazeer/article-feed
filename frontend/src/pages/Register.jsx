@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axiosInstance from '../utils/axiosInstance'
+import { toast } from "react-toastify";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -11,6 +14,7 @@ export default function Register() {
     confirmPassword: "",
     preferences: [],
   });
+  const navigate = useNavigate()
 
   const articleCategories = ["Technology", "Health", "Finance", "Education", "Sports"];
 
@@ -23,13 +27,26 @@ export default function Register() {
     setFormData({ ...formData, preferences: selectedOptions });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+      toast.error("Passwords do not match!");
       return;
     }
-    console.log("Form Data Submitted:", formData);
+
+    try {
+      const response = await axiosInstance.post("/auth/register", formData);
+      console.log("Response:", response.data);
+      toast.success("OTP sent to email. Please verify your account.");
+      
+    
+      navigate("/verify-otp", { state: { email: formData.email } });
+      
+    } catch (error) {
+      console.error("Registration failed:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "Registration failed.");
+    }
   };
 
   return (
@@ -138,6 +155,14 @@ export default function Register() {
             Register
           </button>
         </form>
+
+          {/* Login Link */}
+          <p className="mt-4 text-center text-gray-600">
+          If you  have an account?{" "}
+          <a href="/login" className="text-blue-500 hover:underline">
+            Login
+          </a>
+        </p>
       </div>
     </div>
   );
