@@ -19,10 +19,10 @@ const Navbar = () => {
 
    
       <div className="space-x-6">
-        <a href="/" className="text-gray-300 hover:text-white">Dashboard</a>
-        <a href="/settings" className="text-gray-300 hover:text-white">Settings</a>
-        <a href="/create" className="text-gray-300 hover:text-white">Create Article</a>
-        <a href="myarticle" className="text-gray-300 hover:text-white">My Articles</a>
+      <button onClick={() => navigate("/")} className="text-gray-300 hover:text-white">Dashboard</button>
+      <button onClick={() => navigate("/settings")} className="text-gray-300 hover:text-white">Settings</button>
+      <button onClick={() => navigate("/create")} className="text-gray-300 hover:text-white">Create Article</button>
+      <button onClick={() => navigate("/myarticle")} className="text-gray-300 hover:text-white">My Articles</button>
       </div>
 
       <button
