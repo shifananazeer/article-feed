@@ -10,7 +10,7 @@ import "swiper/css/pagination";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [, setIsAuthenticated] = useState(false);
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -156,7 +156,7 @@ const Dashboard = () => {
                 <XCircle size={24} className="text-gray-500 hover:text-red-500" />
               </button>
             </div>
-                {/* Swiper Image Slider */}
+              
                 {selectedArticle.images?.length > 0 && (
               <Swiper
                 modules={[Navigation, Pagination]}

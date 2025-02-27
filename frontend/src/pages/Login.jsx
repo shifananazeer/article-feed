@@ -4,7 +4,7 @@ import axiosInstance from "../utils/axiosInstance";
 import { toast } from "react-toastify";
 
 const Login = () => {
-   const [isAuthenticated, setIsAuthenticated] = useState(false);
+   const [, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     emailOrPhone: "",
@@ -24,13 +24,13 @@ const Login = () => {
       }
     }, []);
 
-  // Handle input change
+  
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError(""); // Clear error when typing
+    setError(""); 
   };
 
-  // Handle form submission
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { emailOrPhone, password } = formData;
@@ -45,8 +45,6 @@ const Login = () => {
       const response = await axiosInstance.post("/auth/login", { emailOrPhone, password });
 
       const { accessToken, refreshToken, userId } = response.data;
-
-      // Store tokens & user ID in local storage
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
       localStorage.setItem("userId", userId);
@@ -68,7 +66,7 @@ const Login = () => {
         {error && <p className="text-red-500 text-center mb-3">{error}</p>}
 
         <form onSubmit={handleSubmit}>
-          {/* Email or Phone Input */}
+   
           <div className="mb-4">
             <label className="block text-gray-700">Email or Phone</label>
             <input
@@ -81,7 +79,7 @@ const Login = () => {
             />
           </div>
 
-          {/* Password Input */}
+     
           <div className="mb-4">
             <label className="block text-gray-700">Password</label>
             <input
@@ -94,7 +92,7 @@ const Login = () => {
             />
           </div>
 
-          {/* Submit Button */}
+   
           <button
             type="submit"
             className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition duration-300"
@@ -103,7 +101,7 @@ const Login = () => {
           </button>
         </form>
 
-        {/* Register Link */}
+   
         <p className="mt-4 text-center text-gray-600">
           Don't have an account?{" "}
           <a href="/register" className="text-blue-500 hover:underline">

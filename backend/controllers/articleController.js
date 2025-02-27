@@ -2,18 +2,18 @@ import Article from "../models/Article.js";
 import Category from '../models/Category.js'
 import User from '../models/User.js'
 import mongoose  from "mongoose";
-// Create a new article
+
 export const createArticle = async (req, res) => {
   try {
     const { title, description, category, tags, author } = req.body;
-    const imageUrls = req.files.map((file) => `uploads/${file.filename}`); // Save file paths
+    const imageUrls = req.files.map((file) => `uploads/${file.filename}`); 
 
     const newArticle = new Article({
       title,
       description,
       category,
       tags: Array.isArray(tags) ? tags : tags.split(","),
-      images: imageUrls, // Store image URLs as an array
+      images: imageUrls, 
       author
     });
 
@@ -28,7 +28,7 @@ export const createArticle = async (req, res) => {
 
   export const getCategories =  async (req , res) => {
     try {
-      const categories = await Category.find().sort({ createdAt: -1 }); // Fetch all categories
+      const categories = await Category.find().sort({ createdAt: -1 }); 
       console.log("cat" , categories)
       res.json(categories);
     } catch (error) {
@@ -45,8 +45,6 @@ export const createArticle = async (req, res) => {
       if (!mongoose.Types.ObjectId.isValid(userId)) {
         return res.status(400).json({ message: "Invalid user ID format" });
       }
-  
-      // Find all articles where the author matches the given userId
       const articles = await Article.find({ author: userId }).sort({ createdAt: -1 });
   
       if (!articles.length) {
@@ -64,13 +62,11 @@ export const createArticle = async (req, res) => {
     try {
       const { articleId } = req.params;
      console.log("article Id" , articleId)
-      // Find and delete the article
       const deletedArticle = await Article.findByIdAndDelete( articleId );
 
       if (!deletedArticle) {
           return res.status(404).json({ success: false, message: "Article not found" });
       }
-
       res.json({ success: true, message: "Article deleted successfully" });
   } catch (error) {
       console.error("Error deleting article:", error);
@@ -86,7 +82,6 @@ export const createArticle = async (req, res) => {
         if (!article) {
             return res.status(404).json({ success: false, message: "Article not found" });
         }
-
         let parsedExistingImages = [];
         if (existingImages) {
             try {

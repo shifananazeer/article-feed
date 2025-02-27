@@ -55,7 +55,7 @@ export default function Register() {
         <h2 className="text-2xl font-bold text-center text-blue-900 mb-6">Register</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* First & Last Name */}
+       
           <div className="flex gap-4">
             <input
               type="text"
@@ -77,7 +77,7 @@ export default function Register() {
             />
           </div>
 
-          {/* Phone & Email */}
+      
           <input
             type="tel"
             name="phone"
@@ -97,7 +97,7 @@ export default function Register() {
             className="w-full p-2 border rounded"
           />
 
-          {/* Date of Birth */}
+      
           <input
             type="date"
             name="dob"
@@ -107,7 +107,7 @@ export default function Register() {
             className="w-full p-2 border rounded"
           />
 
-          {/* Password & Confirm Password */}
+    
           <input
             type="password"
             name="password"
@@ -127,7 +127,7 @@ export default function Register() {
             className="w-full p-2 border rounded"
           />
 
-          {/* Article Preferences (Multi-select) */}
+     
           <label className="block font-medium">Article Preferences:</label>
           <select
             multiple
@@ -143,20 +143,20 @@ export default function Register() {
             ))}
           </select>
 
-          {/* Show selected preferences */}
+     
           {formData.preferences.length > 0 && (
             <div className="mt-2 text-sm">
               <strong>Selected:</strong> {formData.preferences.join(", ")}
             </div>
           )}
 
-          {/* Submit Button */}
+   
           <button type="submit" className="w-full bg-blue-900 text-white p-2 rounded hover:bg-blue-800">
             Register
           </button>
         </form>
 
-          {/* Login Link */}
+         
           <p className="mt-4 text-center text-gray-600">
           If you  have an account?{" "}
           <a href="/login" className="text-blue-500 hover:underline">

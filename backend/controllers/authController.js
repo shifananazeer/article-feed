@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-import sendEmail from '../utils/sendEmail.js'; // Ensure you have this function
+import sendEmail from '../utils/sendEmail.js'; 
 
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -24,7 +24,7 @@ export const register = async (req, res) => {
             return res.status(400).json({ message: "Email or Phone already exists" });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10); // ✅ Hash password
+        const hashedPassword = await bcrypt.hash(password, 10); 
 
         const otp = generateOTP();
         const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
@@ -79,8 +79,6 @@ export const login = async (req, res) => {
     try {
         const { emailOrPhone, password } = req.body;
         console.log("body", emailOrPhone , password)
-
-        // Check if user exists using email or phone
         const user = await User.findOne({ 
             $or: [{ email: emailOrPhone }, { phone: emailOrPhone }] 
         });
@@ -88,22 +86,14 @@ export const login = async (req, res) => {
         if (!user) {
             return res.status(400).json({ message: "User not found" });
         }
-
-        // Check if user is verified
         if (!user.isVerified) {
             return res.status(400).json({ message: "Account not verified. Please verify your email." });
         }
-
-        // Compare passwords
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(400).json({ message: "Invalid credentials" });
         }
-
-        // Generate JWT tokens
         const { accessToken, refreshToken } = generateTokens(user);
-
-        // Store refresh token in cookies
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             secure: true,
@@ -124,20 +114,14 @@ export const refreshAccessToken = async (req, res) => {
       if (!refreshToken) {
         return res.status(401).json({ message: "Refresh token required" });
       }
-  
-      // Verify refresh token
       jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, decoded) => {
         if (err) {
           return res.status(403).json({ message: "Invalid refresh token" });
         }
-  
-        // Find user by ID from decoded token
         const user = await User.findById(decoded.id);
         if (!user) {
           return res.status(404).json({ message: "User not found" });
         }
-  
-        // Generate new tokens
         const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
   
         res.status(200).json({ accessToken, refreshToken: newRefreshToken });
@@ -153,9 +137,7 @@ export const refreshAccessToken = async (req, res) => {
     try {
         const { userId } = req.params;
         const { firstName, lastName, phone, dob, preferences } = req.body; 
-
         const user = await User.findById(userId);
-
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found" });
         }
@@ -166,9 +148,7 @@ export const refreshAccessToken = async (req, res) => {
         if (preferences) {
             user.preferences = preferences; 
         }
-
         await user.save();
-
         res.json({ success: true, user });
     } catch (error) {
         console.error("Update User Details Error:", error);
@@ -181,9 +161,7 @@ export const resetPassword = async (req, res) => {
     try {
         const { userId } = req.params;
         const { oldPassword, newPassword } = req.body;
-
         const user = await User.findById(userId);
-
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found" });
         }
@@ -205,7 +183,7 @@ export const getUserDetails = async (req, res) => {
     try {
         const { userId } = req.params;
         console.log("userId" , userId)
-        const user = await User.findById(userId).select("-password"); // Exclude password
+        const user = await User.findById(userId).select("-password"); 
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found" });
         }

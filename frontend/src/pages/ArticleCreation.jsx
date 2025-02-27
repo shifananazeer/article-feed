@@ -43,8 +43,6 @@ const ArticleCreation = () => {
         ...prev,
         images: [...prev.images, ...newFiles],
       }))
-
-      // Create preview URLs for new images
       const newPreviews = newFiles.map((file) => URL.createObjectURL(file))
       setPreviews((prev) => [...prev, ...newPreviews])
     }
@@ -55,8 +53,6 @@ const ArticleCreation = () => {
       ...prev,
       images: prev.images.filter((_, i) => i !== index),
     }))
-
-    // Revoke the URL to prevent memory leaks
     URL.revokeObjectURL(previews[index])
     setPreviews((prev) => prev.filter((_, i) => i !== index))
   }
@@ -69,10 +65,10 @@ const ArticleCreation = () => {
     data.append("description", formData.description);
     data.append("category", formData.category);
     data.append("tags", formData.tags);
-    data.append("author", localStorage.getItem("userId")); // Fetch userId from localStorage
+    data.append("author", localStorage.getItem("userId")); 
   
     formData.images.forEach((image) => {
-      data.append("images", image); // Append each image
+      data.append("images", image); 
     });
   
     try {
@@ -93,7 +89,7 @@ const ArticleCreation = () => {
 
   
 
-  // Cleanup preview URLs when component unmounts
+  
   useEffect(() => {
     return () => {
       previews.forEach((preview) => URL.revokeObjectURL(preview))

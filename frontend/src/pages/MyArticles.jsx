@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../utils/axiosInstance';
-import { ThumbsUp, ThumbsDown , Edit, Trash2 } from "lucide-react"
+import { ThumbsUp, ThumbsDown , Edit, Trash2 , XCircle } from "lucide-react"
 import Swal from "sweetalert2"; 
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 
 const MyArticles = () => {
     const [articles, setArticles] = useState([]);
@@ -10,6 +15,9 @@ const MyArticles = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingArticle, setEditingArticle] = useState(null);
     const token = localStorage.getItem('accessToken')
+      const [showModal, setShowModal] = useState(false);
+      const [selectedArticle, setSelectedArticle] = useState(null);
+    
 
     useEffect(() => {
         fetchArticle();
@@ -99,7 +107,7 @@ const MyArticles = () => {
                 {
                     headers: { 
                         "Content-Type": "multipart/form-data",
-                        "Authorization": `Bearer ${token}` // Pass token in Authorization header
+                        "Authorization": `Bearer ${token}` 
                     },
                 }
             );
@@ -127,6 +135,17 @@ const MyArticles = () => {
         const files = Array.from(e.target.files);
         setEditingArticle({ ...editingArticle, newImages: files });
     };
+
+
+    const openModal = (article) => {
+        setSelectedArticle(article);
+        setShowModal(true);
+      };
+    
+      const closeModal = () => {
+        setShowModal(false);
+        setSelectedArticle(null);
+      };
     if (loading) return <div className="text-center py-8">Loading...</div>;
     if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
     if (articles.length === 0) return <div className="text-center py-8">No articles found.</div>;
@@ -155,7 +174,7 @@ const MyArticles = () => {
                                 <span>{article.category}</span>
                                 <span>{new Date(article.createdAt).toLocaleDateString()}</span>
                             </div>
-                            <button>Read More</button>
+                           
                             <div className="mt-2 flex flex-wrap gap-2">
                                 {article.tags?.map((tag, index) => (
                                     <span key={index} className="bg-blue-200 rounded-full px-2 py-1 text-xs">
@@ -173,6 +192,13 @@ const MyArticles = () => {
                   <span>{article.disLikes}</span>
                 </div>
               </div>
+
+              <button
+              className="mt-3 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300"
+              onClick={() => openModal(article)}
+            >
+              Read More
+            </button>
 
          
                  <div className="flex justify-end mt-4 space-x-3">
@@ -197,10 +223,9 @@ const MyArticles = () => {
             </div>
             {isModalOpen && (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
-        <div className="bg-white p-6 rounded-lg w-96">
+        <div className="bg-white p-6 rounded-lg w-[700px]"> {/* Increased width */}
             <h2 className="text-xl font-semibold mb-4">Edit Article</h2>
 
-            {/* Title */}
             <label className="block mb-2 text-sm font-medium text-gray-700">Title</label>
             <input
                 type="text"
@@ -209,7 +234,6 @@ const MyArticles = () => {
                 className="w-full p-2 border rounded"
             />
 
-            {/* Description */}
             <label className="block mt-4 mb-2 text-sm font-medium text-gray-700">Description</label>
             <textarea
                 value={editingArticle?.description || ""}
@@ -217,7 +241,6 @@ const MyArticles = () => {
                 className="w-full p-2 border rounded"
             />
 
-            {/* Category Dropdown */}
             <label className="block mt-4 mb-2 text-sm font-medium text-gray-700">Category</label>
             <select
                 value={editingArticle?.category || ""}
@@ -230,7 +253,6 @@ const MyArticles = () => {
                 <option value="Lifestyle">Lifestyle</option>
             </select>
 
-         
             <label className="block mt-4 mb-2 text-sm font-medium text-gray-700">Tags</label>
             <input
                 type="text"
@@ -240,8 +262,7 @@ const MyArticles = () => {
                 placeholder="Enter tags separated by commas"
             />
 
-        
-             <label className="block mt-4 mb-2 text-sm font-medium text-gray-700">Images</label>
+            <label className="block mt-4 mb-2 text-sm font-medium text-gray-700">Images</label>
             <div className="flex flex-wrap gap-2">
                 {editingArticle?.images?.map((image, index) => (
                     <div key={index} className="relative">
@@ -256,7 +277,6 @@ const MyArticles = () => {
                 ))}
             </div>
 
-        
             <label className="block mt-4 mb-2 text-sm font-medium text-gray-700">Upload New Images</label>
             <input
                 type="file"
@@ -265,7 +285,6 @@ const MyArticles = () => {
                 className="w-full p-2 border rounded"
             />
 
-      
             <div className="flex justify-end mt-4">
                 <button onClick={() => setIsModalOpen(false)} className="mr-2 px-4 py-2 bg-gray-400 text-white rounded">
                     Cancel
@@ -277,6 +296,49 @@ const MyArticles = () => {
         </div>
     </div>
 )}
+
+
+    {/* Modal Component */}
+    {showModal && selectedArticle && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-3/4 md:w-1/2 lg:w-1/3">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">{selectedArticle.title}</h2>
+              <button onClick={closeModal}>
+                <XCircle size={24} className="text-gray-500 hover:text-red-500" />
+              </button>
+            </div>
+              
+                {selectedArticle.images?.length > 0 && (
+              <Swiper
+                modules={[Navigation, Pagination]}
+                navigation
+                pagination={{ clickable: true }}
+                className="w-full h-64 rounded-lg"
+              >
+                {selectedArticle.images.map((image, index) => (
+                  <SwiperSlide key={index}>
+                    <img
+                      src={`${import.meta.env.VITE_API_URL}/${image}`}
+                      alt={`Slide ${index + 1}`}
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            )}
+
+            <p className="text-gray-700 mt-3">{selectedArticle.description}</p>
+            <p className="text-gray-500 text-xs mt-1">Category: {selectedArticle.category}</p>
+            <button
+              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300 w-full"
+              onClick={closeModal}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
         </div>
         

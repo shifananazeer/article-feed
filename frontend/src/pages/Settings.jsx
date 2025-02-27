@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react"; 
-import axios from "axios";
-import Swal from "sweetalert2"; // Make sure to install sweetalert2 for alerts
+import Swal from "sweetalert2";
 import axiosInstance from "../utils/axiosInstance";
 
 const Settings = () => {
@@ -101,7 +100,7 @@ const Settings = () => {
 
     const handlePreferencesChange = (e) => {
         const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-        setUser({ ...user, preferences: selectedOptions }); // Update preferences state
+        setUser({ ...user, preferences: selectedOptions }); 
     };
 
     return (
