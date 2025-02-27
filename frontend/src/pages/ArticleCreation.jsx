@@ -79,7 +79,7 @@ const ArticleCreation = () => {
       setMessage(response.data.message);
       setFormData({ title: "", description: "", category: "", tags: "", images: [] });
       setPreviews([]);
-      navigate('/myarticles')
+      navigate('/myarticle')
       
     } catch (error) {
       console.error("Error creating article:", error);
