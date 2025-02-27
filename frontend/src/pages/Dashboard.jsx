@@ -131,7 +131,7 @@ const Dashboard = () => {
                 className="flex items-center space-x-1 px-3 py-1 rounded-md text-sm transition text-gray-500 hover:text-red-600"
               >
                 <ThumbsDown size={18} className={`${article.dislikes > 0 ? "text-red-500" : ""}`} />
-                <span>{article.dislikes}</span>
+                <span>{article.disLikes}</span>
               </button>
               <button onClick={() => handleBlock(article._id)}>Block</button>
             </div>
