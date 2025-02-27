@@ -12,6 +12,7 @@ const Dashboard = () => {
   const userId = localStorage.getItem("userId");
   const [likedArticles, setLikedArticles] = useState({});
   const [dislikedArticles, setDislikedArticles] = useState({});
+  const token  = localStorage.getItem('accessToken')
 
   useEffect(() => {
     const accessToken = localStorage.getItem("accessToken");
@@ -28,7 +29,11 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchArticles = async () => {
         try {
-            const response = await axiosInstance.get(`/articles/prefrences/${userId}`);
+            const response = await axiosInstance.get(`/articles/prefrences/${userId}` ,{
+                headers: {
+                    Authorization: `Bearer ${token}` 
+                }
+            });
             setArticles(response.data.articles);
         } catch (err) {
             setError("Failed to load articles.");
@@ -43,10 +48,15 @@ const Dashboard = () => {
 
 const handleLikeDislike = async (articleId, action) => {
   try {
-      const response = await axiosInstance.post(`/articles/like-dislike`, {
-          articleId,
-          action
-      });
+    const response = await axiosInstance.post(
+        `/articles/like-dislike`,
+        { articleId, action },
+        {
+            headers: {
+                "Authorization": `Bearer ${token}` // Add token in the header
+            }
+        }
+    );
 
       setArticles((prev) =>
           prev.map((article) =>
@@ -63,7 +73,11 @@ const handleLikeDislike = async (articleId, action) => {
 
 const handleBlock = async (articleId) => {
   try {
-      await axiosInstance.post(`/articles/block`, { userId, articleId });
+      await axiosInstance.post(`/articles/block`, { userId, articleId } ,{
+        headers: {
+            "Authorization": `Bearer ${token}` 
+        }
+      });
       setArticles((prev) => prev.filter((article) => article._id !== articleId)); 
   } catch (error) {
       console.error("Error blocking article", error);

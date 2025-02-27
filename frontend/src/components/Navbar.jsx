@@ -23,10 +23,10 @@ const Navbar = () => {
 
       {/* Center - Navigation Links */}
       <div className="space-x-6">
-        <a href="#" className="text-gray-300 hover:text-white">Dashboard</a>
-        <a href="#" className="text-gray-300 hover:text-white">Settings</a>
-        <a href="#" className="text-gray-300 hover:text-white">Create Article</a>
-        <a href="#" className="text-gray-300 hover:text-white">My Articles</a>
+        <a href="/" className="text-gray-300 hover:text-white">Dashboard</a>
+        <a href="/settings" className="text-gray-300 hover:text-white">Settings</a>
+        <a href="/create" className="text-gray-300 hover:text-white">Create Article</a>
+        <a href="myarticle" className="text-gray-300 hover:text-white">My Articles</a>
       </div>
 
       {/* Right Side - Logout Button */}

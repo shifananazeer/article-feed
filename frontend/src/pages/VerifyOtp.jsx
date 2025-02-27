@@ -21,6 +21,10 @@ const VerifyOTP = () => {
 
     try {
       const response = await axiosInstance.post("/auth/verify-otp", { email, otp });
+      const { accessToken, refreshToken, userId } = response.data;
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+      localStorage.setItem("userId", userId);
 
       toast.success("OTP verified successfully!");
       navigate("/"); 

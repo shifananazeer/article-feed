@@ -45,7 +45,7 @@ export default function Register() {
       
     } catch (error) {
       console.error("Registration failed:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "Registration failed.");
+      toast.error(error.response?.data?.message || "Registration failed.");
     }
   };
 

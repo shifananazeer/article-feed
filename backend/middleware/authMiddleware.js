@@ -1,4 +1,6 @@
-import { verify } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
+const { verify } = jwt; 
+
 
 export function authenticateUser(req, res, next) {
   const token = req.header("Authorization");

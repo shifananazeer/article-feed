@@ -29,6 +29,7 @@ export const createArticle = async (req, res) => {
   export const getCategories =  async (req , res) => {
     try {
       const categories = await Category.find().sort({ createdAt: -1 }); // Fetch all categories
+      console.log("cat" , categories)
       res.json(categories);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -49,7 +50,7 @@ export const createArticle = async (req, res) => {
       const articles = await Article.find({ author: userId }).sort({ createdAt: -1 });
   
       if (!articles.length) {
-        return res.status(404).json({ message: "No articles found for this user." });
+        return res.status(200).json({ message: "No articles found for this user." });
       }
       console.log("arti" , articles)
       res.status(200).json({ articles });
@@ -86,7 +87,6 @@ export const createArticle = async (req, res) => {
             return res.status(404).json({ success: false, message: "Article not found" });
         }
 
-        // Ensure existingImages is properly parsed
         let parsedExistingImages = [];
         if (existingImages) {
             try {
@@ -96,17 +96,11 @@ export const createArticle = async (req, res) => {
                 return res.status(400).json({ success: false, message: "Invalid image data" });
             }
         }
-
-        // Keep only the images the user hasn't removed
         article.images = parsedExistingImages;
-
-        // Append new images if uploaded
         if (req.files && req.files.length > 0) {
             const newImagePaths = req.files.map(file => `uploads/${file.filename}`);
             article.images.push(...newImagePaths);
         }
-
-        // Update other fields
         article.title = title;
         article.description = description;
         article.category = category;
@@ -132,20 +126,15 @@ export const getDashboardArticles = async (req, res) => {
       if (!user) {
           return res.status(404).json({ success: false, message: "User not found" });
       }
-
-      // Get user preferences (array of categories)
       const { preferences } = user;
 
       if (!preferences || preferences.length === 0) {
           return res.json({ success: true, articles: [] });
       }
-
-      // Fetch articles that match the user's preferred categories and are not blocked by the user
       const articles = await Article.find({
-          category: { $in: preferences },  // Find articles with categories in the preferences array
-          blockBy: { $ne: userId }        // Exclude articles blocked by the user
-      }).sort({ createdAt: -1 });  // Sort by latest articles first
-
+          category: { $in: preferences },  
+          blockBy: { $ne: userId }      
+      }).sort({ createdAt: -1 }); 
       res.json({ success: true, articles });
   } catch (error) {
       console.error("Get Dashboard Articles Error:", error);
@@ -156,7 +145,7 @@ export const getDashboardArticles = async (req, res) => {
 
 export const likeOrDislikeArticle = async (req, res) => {
   console.log("body" , req.body)
-  const { articleId, action } = req.body; // action: "like" or "dislike"
+  const { articleId, action } = req.body; 
 
   try {
       const article = await Article.findById(articleId);
@@ -165,7 +154,7 @@ export const likeOrDislikeArticle = async (req, res) => {
       if (action === "like") {
           article.likes += 1;
       } else if (action === "dislike") {
-          article.dislikes += 1;
+          article.disLikes += 1;
       }
 
       await article.save();
@@ -184,8 +173,6 @@ export const blockArticle = async (req, res) => {
 
       const article = await Article.findById(articleId);
       if (!article) return res.status(404).json({ message: "Article not found" });
-
-      // Add the user ID to the blockBy array if it's not already present
       if (!article.blockBy.includes(userId)) {
           article.blockBy.push(userId);
           await article.save();

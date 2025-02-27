@@ -9,6 +9,7 @@ const MyArticles = () => {
     const [error, setError] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingArticle, setEditingArticle] = useState(null);
+    const token = localStorage.getItem('accessToken')
 
     useEffect(() => {
         fetchArticle();
@@ -17,10 +18,12 @@ const MyArticles = () => {
     const fetchArticle = async () => {
         try {
             const userId = localStorage.getItem('userId');
-            const response = await axiosInstance.get(`/articles/articles/${userId}`);
-            console.log("API Response:", response.data); // Debugging
-
-            // Ensure `articles` is extracted properly
+            const response = await axiosInstance.get(`/articles/articles/${userId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}` 
+                }
+            });
+            console.log("API Response:", response.data); 
             setArticles(response.data.articles || []);
         } catch (err) {
             console.error("Error fetching articles:", err);
@@ -33,7 +36,7 @@ const MyArticles = () => {
 
 
     const handleDelete = async (articleId) => {
-        // Show SweetAlert confirmation
+    
         const result = await Swal.fire({
             title: "Are you sure?",
             text: "This action cannot be undone!",
@@ -46,13 +49,14 @@ const MyArticles = () => {
     
         if (result.isConfirmed) {
             try {
-                const response = await axiosInstance.delete(`/articles/dele/${articleId}`);
+                const response = await axiosInstance.delete(`/articles/dele/${articleId}` ,{
+                    headers: {
+                        Authorization: `Bearer ${token}` 
+                    }
+                });
     
                 if (response.data.success) {
-                    // Remove deleted article from state
                     setArticles(prevArticles => prevArticles.filter(article => article._id !== articleId));
-    
-                    // Show success message
                     Swal.fire("Deleted!", "Your article has been deleted.", "success");
                 } else {
                     Swal.fire("Error!", "Failed to delete article.", "error");
@@ -67,8 +71,8 @@ const MyArticles = () => {
     const handleEditClick = (article) => {
         setEditingArticle({
             ...article,
-            tags: article.tags ? article.tags.join(", ") : "", // Convert tags array to string
-            images: article.images || [], // Ensure images array exists
+            tags: article.tags ? article.tags.join(", ") : "", 
+            images: article.images || [], 
         });
         setIsModalOpen(true);
     };
@@ -81,30 +85,30 @@ const MyArticles = () => {
             formData.append("description", editingArticle.description);
             formData.append("category", editingArticle.category);
             formData.append("tags", editingArticle.tags);
-            
-            // Append existing images
             editingArticle.images.forEach((image, index) => {
                 formData.append(`existingImages[${index}]`, image);
             });
-    
-            // Append new images
             if (editingArticle.newImages) {
                 editingArticle.newImages.forEach((file) => {
                     formData.append("newImages", file);
                 });
             }
-    
-            const response = await axiosInstance.put(`/articles/update/${editingArticle._id}`, formData, {
-                headers: { "Content-Type": "multipart/form-data" },
-            });
-    
+            const response = await axiosInstance.put(
+                `/articles/update/${editingArticle._id}`,
+                formData,
+                {
+                    headers: { 
+                        "Content-Type": "multipart/form-data",
+                        "Authorization": `Bearer ${token}` // Pass token in Authorization header
+                    },
+                }
+            );
             if (response.data.success) {
                 setArticles((prevArticles) =>
                     prevArticles.map((article) =>
                         article._id === editingArticle._id ? { ...article, ...response.data.article } : article
                     )
                 );
-    
                 setIsModalOpen(false);
                 Swal.fire("Success!", "Article updated successfully.", "success");
             } else {
@@ -115,21 +119,14 @@ const MyArticles = () => {
             Swal.fire("Error!", "Something went wrong.", "error");
         }
     };
-    
-
     const handleRemoveExistingImage = (index) => {
         const updatedImages = editingArticle.images.filter((_, i) => i !== index);
         setEditingArticle({ ...editingArticle, images: updatedImages });
-    };
-
-    
+    }; 
     const handleNewImageUpload = (e) => {
         const files = Array.from(e.target.files);
         setEditingArticle({ ...editingArticle, newImages: files });
     };
-    
-    
-
     if (loading) return <div className="text-center py-8">Loading...</div>;
     if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
     if (articles.length === 0) return <div className="text-center py-8">No articles found.</div>;
@@ -142,7 +139,7 @@ const MyArticles = () => {
                     <div key={article._id} className="bg-white rounded-lg shadow-md overflow-hidden">
                         {article.images?.length > 0 && (
                             <div className="relative h-48">
-                                {/* Use <img> for React projects */}
+                              
                                 <img 
                                  src={`${import.meta.env.VITE_API_URL}/${article.images?.[0]}`}
                                   alt={article.title} 
@@ -153,7 +150,6 @@ const MyArticles = () => {
                         )}
                         <div className="p-4">
                             <h2 className="text-xl font-semibold mb-2">{article.title}</h2>
-                            {/* <p className="text-gray-600 mb-2">{article.description}</p> */}
                            
                             <div className="flex justify-between items-center text-sm text-gray-500">
                                 <span>{article.category}</span>
@@ -178,7 +174,7 @@ const MyArticles = () => {
                 </div>
               </div>
 
-                 {/* Buttons */}
+         
                  <div className="flex justify-end mt-4 space-x-3">
                                 <button
                                    onClick={() => handleEditClick(article)} 
@@ -234,7 +230,7 @@ const MyArticles = () => {
                 <option value="Lifestyle">Lifestyle</option>
             </select>
 
-            {/* Tags (Comma-Separated) */}
+         
             <label className="block mt-4 mb-2 text-sm font-medium text-gray-700">Tags</label>
             <input
                 type="text"
@@ -244,7 +240,7 @@ const MyArticles = () => {
                 placeholder="Enter tags separated by commas"
             />
 
-             {/* Image Preview Section */}
+        
              <label className="block mt-4 mb-2 text-sm font-medium text-gray-700">Images</label>
             <div className="flex flex-wrap gap-2">
                 {editingArticle?.images?.map((image, index) => (
@@ -260,7 +256,7 @@ const MyArticles = () => {
                 ))}
             </div>
 
-            {/* Upload New Images */}
+        
             <label className="block mt-4 mb-2 text-sm font-medium text-gray-700">Upload New Images</label>
             <input
                 type="file"
@@ -269,7 +265,7 @@ const MyArticles = () => {
                 className="w-full p-2 border rounded"
             />
 
-            {/* Buttons */}
+      
             <div className="flex justify-end mt-4">
                 <button onClick={() => setIsModalOpen(false)} className="mr-2 px-4 py-2 bg-gray-400 text-white rounded">
                     Cancel

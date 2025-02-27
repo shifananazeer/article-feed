@@ -68,7 +68,7 @@ export const verifyOTP = async (req, res) => {
         const { accessToken, refreshToken } = generateTokens(user);
 
         res.cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, sameSite: "strict" });
-        res.status(200).json({ message: "Account verified", accessToken });
+        res.status(200).json({ message: "Account verified", accessToken  , refreshToken , userId: user._id})
 
     } catch (error) {
         res.status(500).json({ message: "Server error", error });
@@ -147,3 +147,72 @@ export const refreshAccessToken = async (req, res) => {
       res.status(500).json({ message: "Server error", error });
     }
   };
+
+
+  export const updateUserDetails = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { firstName, lastName, phone, dob, preferences } = req.body; 
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+        user.firstName = firstName;
+        user.lastName = lastName;
+        user.phone = phone;
+        user.dob = dob;
+        if (preferences) {
+            user.preferences = preferences; 
+        }
+
+        await user.save();
+
+        res.json({ success: true, user });
+    } catch (error) {
+        console.error("Update User Details Error:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
+
+export const resetPassword = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { oldPassword, newPassword } = req.body;
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+        const isMatch = await bcrypt.compare(oldPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ success: false, message: "Old password is incorrect" });
+        }
+        user.password = await bcrypt.hash(newPassword, 10);
+        await user.save();
+
+        res.json({ success: true, message: "Password reset successfully" });
+    } catch (error) {
+        console.error("Reset Password Error:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
+export const getUserDetails = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        console.log("userId" , userId)
+        const user = await User.findById(userId).select("-password"); // Exclude password
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+        console.log("user" , user)
+        res.json({ success: true, user });
+    } catch (error) {
+        console.error("Get User Details Error:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
