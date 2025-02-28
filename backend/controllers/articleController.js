@@ -6,26 +6,56 @@ import { v2 as cloudinary } from "cloudinary";
 
 export const createArticle = async (req, res) => {
   try {
-    const { title, description, category, tags, author } = req.body;
+      console.log("📤 Received Article Creation Request");
+      console.log("📥 Request Body:", req.body);
 
-    // Extract Cloudinary URLs from req.files
-    const imageUrls = req.files.map((file) => file.path); // Cloudinary stores URLs in `path`
+      const { title, description, category, tags, author } = req.body;
 
-    const newArticle = new Article({
-      title,
-      description,
-      category,
-      tags: Array.isArray(tags) ? tags : tags.split(","), // Ensure tags are an array
-      images: imageUrls, // Save Cloudinary URLs instead of local paths
-      author,
-    });
+      // ✅ Check if `author` exists before proceeding
+      if (!author) {
+          return res.status(400).json({ success: false, message: "Author is required." });
+      }
 
-    await newArticle.save();
+      if (!req.files || req.files.length === 0) {
+          return res.status(400).json({ success: false, message: "No images uploaded" });
+      }
 
-    res.status(201).json({ message: "Article created successfully", article: newArticle });
+      // ✅ Upload images to Cloudinary
+      let uploadedImages = [];
+      for (const file of req.files) {
+          try {
+              console.log("⏳ Uploading file to Cloudinary:", file.path);
+              const result = await cloudinary.uploader.upload(file.path, {
+                  folder: "articles",
+                  resource_type: "image",
+              });
+              uploadedImages.push(result.secure_url);
+          } catch (uploadError) {
+              console.error("❌ Cloudinary Upload Error:", uploadError);
+              return res.status(500).json({ success: false, message: "Cloudinary upload failed", error: uploadError.message });
+          }
+      }
+
+      // ✅ Ensure tags are properly formatted
+      const tagArray = tags ? tags.split(",").map(tag => tag.trim()) : [];
+
+      // ✅ Create the new article
+      const article = new Article({
+          title,
+          description,
+          category,
+          tags: tagArray,
+          author,  // ✅ Ensure `author` is saved
+          images: uploadedImages, // ✅ Save Cloudinary URLs
+      });
+
+      await article.save();
+      console.log("✅ Article created successfully:", article);
+
+      res.json({ success: true, article });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+      console.error("❌ Article Creation Error:", error);
+      res.status(500).json({ success: false, message: "Internal server error", error: error.message });
   }
 };
 
