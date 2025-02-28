@@ -6,25 +6,27 @@ import mongoose  from "mongoose";
 export const createArticle = async (req, res) => {
   try {
     const { title, description, category, tags, author } = req.body;
-    const imageUrls = req.files.map((file) => `uploads/${file.filename}`); 
+
+    // Extract Cloudinary URLs from req.files
+    const imageUrls = req.files.map((file) => file.path); // Cloudinary stores URLs in `path`
 
     const newArticle = new Article({
       title,
       description,
       category,
-      tags: Array.isArray(tags) ? tags : tags.split(","),
-      images: imageUrls, 
-      author
+      tags: Array.isArray(tags) ? tags : tags.split(","), // Ensure tags are an array
+      images: imageUrls, // Save Cloudinary URLs instead of local paths
+      author,
     });
 
     await newArticle.save();
+
     res.status(201).json({ message: "Article created successfully", article: newArticle });
   } catch (error) {
-    console.error("Error creating article:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
   export const getCategories =  async (req , res) => {
     try {

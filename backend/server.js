@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 import authRoutes from './routes/authRoutes.js'
 import articleRoutes from './routes/articleRoute.js'
 import path from "path";
+import { v2 as cloudinary } from "cloudinary";
 
 
 dotenv.config();
@@ -19,6 +20,14 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.get("/api", (req, res) => {

@@ -160,7 +160,7 @@ const MyArticles = () => {
                             <div className="relative h-48">
                               
                                 <img 
-                                 src={`${import.meta.env.VITE_API_URL}/${article.images?.[0]}`}
+                                src={article.images[0]}
                                   alt={article.title} 
                                   className="w-full h-48 object-cover"
                                   onError={(e) => e.target.src = "/placeholder.svg"} 
@@ -266,7 +266,7 @@ const MyArticles = () => {
             <div className="flex flex-wrap gap-2">
                 {editingArticle?.images?.map((image, index) => (
                     <div key={index} className="relative">
-                        <img src={`${import.meta.env.VITE_API_URL}/${image}`} alt="Article" className="w-20 h-20 object-cover rounded" />
+                        <img   src={image}  alt="Article" className="w-20 h-20 object-cover rounded" />
                         <button
                             className="absolute top-0 right-0 bg-red-500 text-white text-xs px-1 rounded"
                             onClick={() => handleRemoveExistingImage(index)}
@@ -319,7 +319,7 @@ const MyArticles = () => {
                 {selectedArticle.images.map((image, index) => (
                   <SwiperSlide key={index}>
                     <img
-                      src={`${import.meta.env.VITE_API_URL}/${image}`}
+                       src={image} 
                       alt={`Slide ${index + 1}`}
                       className="w-full h-full object-cover rounded-lg"
                     />

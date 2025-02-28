@@ -108,7 +108,7 @@ const Dashboard = () => {
           <div key={article._id} className="border border-gray-200 rounded-lg p-4 shadow-md">
             {article.images?.length > 0 && (
               <img
-                src={`${import.meta.env.VITE_API_URL}/${article.images?.[0]}`}
+              src={article.images[0]}
                 alt={article.title}
                 className="w-full h-48 object-cover rounded-lg"
               />
@@ -167,7 +167,7 @@ const Dashboard = () => {
                 {selectedArticle.images.map((image, index) => (
                   <SwiperSlide key={index}>
                     <img
-                      src={`${import.meta.env.VITE_API_URL}/${image}`}
+                      src={image} 
                       alt={`Slide ${index + 1}`}
                       className="w-full h-full object-cover rounded-lg"
                     />
