@@ -207,7 +207,7 @@ export const likeOrDislikeArticle = async (req, res) => {
       }
 
       await article.save();
-      res.json({ likes: article.likes, dislikes: article.dislikes });
+      res.json({ likes: article.likes, disLikes: article.disLikes });
   } catch (error) {
       res.status(500).json({ message: "Error updating likes/dislikes" });
   }
