@@ -159,9 +159,9 @@ export default function Register() {
          
           <p className="mt-4 text-center text-gray-600">
           If you  have an account?{" "}
-          <a href="/login" className="text-blue-500 hover:underline">
-            Login
-          </a>
+          <button onClick={() => navigate("/login")} className="text-blue-500 hover:underline">
+      Login
+    </button>
         </p>
       </div>
     </div>

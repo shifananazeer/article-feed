@@ -45,16 +45,16 @@ export const createArticle = async (req, res) => {
           description,
           category,
           tags: tagArray,
-          author,  // ✅ Ensure `author` is saved
-          images: uploadedImages, // ✅ Save Cloudinary URLs
+          author,  
+          images: uploadedImages, 
       });
 
       await article.save();
-      console.log("✅ Article created successfully:", article);
+      console.log(" Article created successfully:", article);
 
       res.json({ success: true, article });
   } catch (error) {
-      console.error("❌ Article Creation Error:", error);
+      console.error(" Article Creation Error:", error);
       res.status(500).json({ success: false, message: "Internal server error", error: error.message });
   }
 };
@@ -109,9 +109,9 @@ export const createArticle = async (req, res) => {
 
   export const updateArticle = async (req, res) => {
     try {
-        console.log("🔹 Received update request for article ID:", req.params.id);
-        console.log("📤 Request Body:", req.body);
-        console.log("📸 Uploaded Files:", req.files);
+        console.log(" Received update request for article ID:", req.params.id);
+        console.log(" Request Body:", req.body);
+        console.log(" Uploaded Files:", req.files);
 
         const { title, description, category, tags, existingImages } = req.body;
         const article = await Article.findById(req.params.id);
@@ -125,47 +125,43 @@ export const createArticle = async (req, res) => {
             try {
                 parsedExistingImages = Array.isArray(existingImages) ? existingImages : JSON.parse(existingImages);
             } catch (err) {
-                console.error("❌ Error parsing existingImages:", err);
+                console.error(" Error parsing existingImages:", err);
                 return res.status(400).json({ success: false, message: "Invalid image data" });
             }
         }
 
-        // Store the existing images (Cloudinary URLs)
+       
         article.images = parsedExistingImages;
-
-        // Handle new images uploaded via "newImages"
         if (req.files && req.files.length > 0) {
             try {
                 const uploadedImages = await Promise.all(
                     req.files.map(async (file) => {
-                        console.log("⏳ Uploading file to Cloudinary:", file.path);
+                        console.log(" Uploading file to Cloudinary:", file.path);
                         const result = await cloudinary.uploader.upload(file.path, {
                             folder: "articles",
                             resource_type: "image",
                         });
-                        console.log("✅ Cloudinary Upload Success:", result.secure_url);
-                        return result.secure_url; // Store only the Cloudinary URL
+                        console.log(" Cloudinary Upload Success:", result.secure_url);
+                        return result.secure_url; 
                     })
                 );
                 article.images.push(...uploadedImages);
             } catch (uploadError) {
-                console.error("❌ Cloudinary Upload Error:", uploadError);
+                console.error(" Cloudinary Upload Error:", uploadError);
                 return res.status(500).json({ success: false, message: "Image upload failed" });
             }
         }
-
-        // Update article details
         article.title = title;
         article.description = description;
         article.category = category;
         article.tags = tags ? tags.split(",").map(tag => tag.trim()) : [];
 
         await article.save();
-        console.log("✅ Article updated successfully:", article);
+        console.log(" Article updated successfully:", article);
 
         res.json({ success: true, article });
     } catch (error) {
-        console.error("❌ Update Error:", error);
+        console.error(" Update Error:", error);
         res.status(500).json({ success: false, message: "Internal server error", error: error.message });
     }
 };
