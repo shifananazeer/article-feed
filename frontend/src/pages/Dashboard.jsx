@@ -63,7 +63,7 @@ const Dashboard = () => {
       setArticles((prev) =>
         prev.map((article) =>
           article._id === articleId
-            ? { ...article, likes: response.data.likes, dislikes: response.data.disLikes }
+            ? { ...article, likes: response.data.likes, disLikes: response.data.disLikes }
             : article
         )
       );
