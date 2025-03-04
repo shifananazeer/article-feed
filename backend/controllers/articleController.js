@@ -6,12 +6,12 @@ import { v2 as cloudinary } from "cloudinary";
 
 export const createArticle = async (req, res) => {
   try {
-      console.log("📤 Received Article Creation Request");
-      console.log("📥 Request Body:", req.body);
+      console.log(" Received Article Creation Request");
+      console.log(" Request Body:", req.body);
 
       const { title, description, category, tags, author } = req.body;
 
-      // ✅ Check if `author` exists before proceeding
+   
       if (!author) {
           return res.status(400).json({ success: false, message: "Author is required." });
       }
@@ -20,26 +20,26 @@ export const createArticle = async (req, res) => {
           return res.status(400).json({ success: false, message: "No images uploaded" });
       }
 
-      // ✅ Upload images to Cloudinary
+  
       let uploadedImages = [];
       for (const file of req.files) {
           try {
-              console.log("⏳ Uploading file to Cloudinary:", file.path);
+              console.log(" Uploading file to Cloudinary:", file.path);
               const result = await cloudinary.uploader.upload(file.path, {
                   folder: "articles",
                   resource_type: "image",
               });
               uploadedImages.push(result.secure_url);
           } catch (uploadError) {
-              console.error("❌ Cloudinary Upload Error:", uploadError);
+              console.error(" Cloudinary Upload Error:", uploadError);
               return res.status(500).json({ success: false, message: "Cloudinary upload failed", error: uploadError.message });
           }
       }
 
-      // ✅ Ensure tags are properly formatted
+    
       const tagArray = tags ? tags.split(",").map(tag => tag.trim()) : [];
 
-      // ✅ Create the new article
+    
       const article = new Article({
           title,
           description,
