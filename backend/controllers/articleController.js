@@ -167,51 +167,113 @@ export const createArticle = async (req, res) => {
 };
 
 export const getDashboardArticles = async (req, res) => {
-  try {
+    try {
       const { userId } = req.params;
-
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const search = req.query.search || "";
+  
+      // Check if the user exists
       const user = await User.findById(userId);
-
       if (!user) {
-          return res.status(404).json({ success: false, message: "User not found" });
+        return res.status(404).json({ success: false, message: "User not found" });
       }
+  
+      // Get user preferences
       const { preferences } = user;
-
       if (!preferences || preferences.length === 0) {
-          return res.json({ success: true, articles: [] });
+        return res.json({ success: true, articles: [], totalPages: 0, currentPage: page });
       }
-      const articles = await Article.find({
-          category: { $in: preferences },  
-          blockBy: { $ne: userId }      
-      }).sort({ createdAt: -1 }); 
-      res.json({ success: true, articles });
-  } catch (error) {
+  
+      // Build query for filtering
+      const query = {
+        category: { $in: preferences },
+        blockBy: { $ne: userId },
+        ...(search && {
+          $or: [
+            { title: { $regex: search, $options: "i" } },
+            { description: { $regex: search, $options: "i" } }
+          ],
+        }),
+      };
+  
+      // Get total number of articles
+      const totalArticles = await Article.countDocuments(query);
+      const totalPages = Math.ceil(totalArticles / limit);
+  
+      // Fetch paginated articles
+      const articles = await Article.find(query)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit);
+  
+      // Send response
+      res.json({
+        success: true,
+        articles,
+        totalPages,
+        currentPage: page,
+      });
+  
+    } catch (error) {
       console.error("Get Dashboard Articles Error:", error);
       res.status(500).json({ success: false, message: "Internal server error" });
-  }
+    }
+  };
+  
+  
+
+
+  export const likeOrDislikeArticle = async (req, res) => {
+    console.log("req.user:", req.user);  // Debugging
+
+    const { articleId, action } = req.body;
+    const userId = req.user?.id; 
+
+    if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    try {
+        const article = await Article.findById(articleId);
+        if (!article) return res.status(404).json({ message: "Article not found" });
+
+        if (!article.likedBy) article.likedBy = [];
+        if (!article.dislikedBy) article.dislikedBy = [];
+
+        const likedIndex = article.likedBy.indexOf(userId);
+        const dislikedIndex = article.dislikedBy.indexOf(userId);
+
+        if (action === "like") {
+            if (likedIndex === -1) {
+                article.likes += 1;
+                article.likedBy.push(userId);
+
+                if (dislikedIndex !== -1) {
+                    article.disLikes -= 1;
+                    article.dislikedBy.splice(dislikedIndex, 1);
+                }
+            }
+        } else if (action === "dislike") {
+            if (dislikedIndex === -1) {
+                article.disLikes += 1;
+                article.dislikedBy.push(userId);
+
+                if (likedIndex !== -1) {
+                    article.likes -= 1;
+                    article.likedBy.splice(likedIndex, 1);
+                }
+            }
+        }
+
+        await article.save();
+        res.json({ likes: article.likes, disLikes: article.disLikes });
+
+    } catch (error) {
+        res.status(500).json({ message: "Error updating likes/dislikes", error });
+    }
 };
 
-
-export const likeOrDislikeArticle = async (req, res) => {
-  console.log("body" , req.body)
-  const { articleId, action } = req.body; 
-
-  try {
-      const article = await Article.findById(articleId);
-      if (!article) return res.status(404).json({ message: "Article not found" });
-
-      if (action === "like") {
-          article.likes += 1;
-      } else if (action === "dislike") {
-          article.disLikes += 1;
-      }
-
-      await article.save();
-      res.json({ likes: article.likes, disLikes: article.disLikes });
-  } catch (error) {
-      res.status(500).json({ message: "Error updating likes/dislikes" });
-  }
-};
 
 export const blockArticle = async (req, res) => {
   const { userId, articleId } = req.body;
