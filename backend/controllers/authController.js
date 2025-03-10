@@ -2,6 +2,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import sendEmail from '../utils/sendEmail.js'; 
+import STATUS_CODES from '../constants/statusCode.js';
+import MESSAGES from '../constants/messages.js';
 
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -16,12 +18,12 @@ export const register = async (req, res) => {
         const { firstName, lastName, phone, email, dob, password, confirmPassword, preferences } = req.body;
 
         if (password !== confirmPassword) {
-            return res.status(400).json({ message: "Passwords do not match" });
+            return res.status(STATUS_CODES.BAD_REQUEST).json({ message:MESSAGES.PASSWORD_ERROR });
         }
 
         const existingUser = await User.findOne({ $or: [{ email }, { phone }] });
         if (existingUser) {
-            return res.status(400).json({ message: "Email or Phone already exists" });
+            return res.status(STATUS_CODES.BAD_REQUEST).json({ message: MESSAGES.EXIST });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10); 
@@ -45,9 +47,9 @@ export const register = async (req, res) => {
         await newUser.save();
         await sendEmail(email, "Verify Your Account", `Your OTP is: ${otp}`);
 
-        res.status(201).json({ message: "OTP sent to email, verify to activate account" });
+        res.status(STATUS_CODES.CREATED).json({ message:MESSAGES.OTP_SEND });
     } catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ message: MESSAGES.INTERNAL_SERVER_ERROR, error });
     }
 };
 
@@ -57,7 +59,7 @@ export const verifyOTP = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (!user || user.otp !== otp || user.otpExpiresAt < new Date()) {
-            return res.status(400).json({ message: "Invalid or expired OTP" });
+            return res.status(STATUS_CODES.BAD_REQUEST).json({ message:MESSAGES.INVALID_OTP });
         }
 
         user.isVerified = true;
@@ -68,10 +70,10 @@ export const verifyOTP = async (req, res) => {
         const { accessToken, refreshToken } = generateTokens(user);
 
         res.cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, sameSite: "strict" });
-        res.status(200).json({ message: "Account verified", accessToken  , refreshToken , userId: user._id})
+        res.status(STATUS_CODES.OK).json({ message:MESSAGES.VERIFIED, accessToken  , refreshToken , userId: user._id})
 
     } catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ message: MESSAGES.INTERNAL_SERVER_ERROR, error });
     }
 };
 
@@ -84,14 +86,14 @@ export const login = async (req, res) => {
         });
 
         if (!user) {
-            return res.status(400).json({ message: "User not found" });
+            return res.status(STATUS_CODES.NOT_FOUND).json({ message: MESSAGES.USER_NOT_FOUNT });
         }
         if (!user.isVerified) {
-            return res.status(400).json({ message: "Account not verified. Please verify your email." });
+            return res.status(STATUS_CODES.BAD_REQUEST).json({ message: MESSAGES.NOT_VERIFIED });
         }
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(400).json({ message: "Invalid credentials" });
+            return res.status(STATUS_CODES.BAD_REQUEST).json({ message:MESSAGES.CREDENTIAL_ERROR });
         }
         const { accessToken, refreshToken } = generateTokens(user);
         res.cookie('refreshToken', refreshToken, {
@@ -100,10 +102,10 @@ export const login = async (req, res) => {
             sameSite: 'strict',
         });
 
-        res.status(200).json({ message: "Login successful", accessToken  , refreshToken ,userId: user._id});
+        res.status(STATUS_CODES.OK).json({ message:MESSAGES.LOGIN_SUCCESS , accessToken  , refreshToken ,userId: user._id});
 
     } catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ message:MESSAGES.INTERNAL_SERVER_ERROR, error });
     }
 };
 
@@ -112,23 +114,23 @@ export const refreshAccessToken = async (req, res) => {
       const { refreshToken } = req.body;
   
       if (!refreshToken) {
-        return res.status(401).json({ message: "Refresh token required" });
+        return res.status(STATUS_CODES.UNAUTHORIZED).json({ message: MESSAGES.UNAUTHERIZED });
       }
       jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, decoded) => {
         if (err) {
-          return res.status(403).json({ message: "Invalid refresh token" });
+          return res.status(STATUS_CODES.FORBIDDEN).json({ message: MESSAGES.UNAUTHERIZED});
         }
         const user = await User.findById(decoded.id);
         if (!user) {
-          return res.status(404).json({ message: "User not found" });
+          return res.status(STATUS_CODES.NOT_FOUND).json({ message:MESSAGES.USER_NOT_FOUNT });
         }
         const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
   
-        res.status(200).json({ accessToken, refreshToken: newRefreshToken });
+        res.status(STATUS_CODES.OK).json({ accessToken, refreshToken: newRefreshToken });
       });
   
     } catch (error) {
-      res.status(500).json({ message: "Server error", error });
+      res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ message: MESSAGES.INTERNAL_SERVER_ERROR, error });
     }
   };
 
@@ -152,7 +154,7 @@ export const refreshAccessToken = async (req, res) => {
         res.json({ success: true, user });
     } catch (error) {
         console.error("Update User Details Error:", error);
-        res.status(500).json({ success: false, message: "Internal server error" });
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: MESSAGES.INTERNAL_SERVER_ERROR });
     }
 };
 
@@ -163,19 +165,19 @@ export const resetPassword = async (req, res) => {
         const { oldPassword, newPassword } = req.body;
         const user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({ success: false, message: "User not found" });
+            return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: MESSAGES.USER_NOT_FOUNT});
         }
         const isMatch = await bcrypt.compare(oldPassword, user.password);
         if (!isMatch) {
-            return res.status(400).json({ success: false, message: "Old password is incorrect" });
+            return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message:MESSAGES.PASSWORD_ERROR});
         }
         user.password = await bcrypt.hash(newPassword, 10);
         await user.save();
 
-        res.json({ success: true, message: "Password reset successfully" });
+        res.json({ success: true, message:  MESSAGES.RESET_SUCCESS});
     } catch (error) {
         console.error("Reset Password Error:", error);
-        res.status(500).json({ success: false, message: "Internal server error" });
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: MESSAGES.INTERNAL_SERVER_ERROR });
     }
 };
 
@@ -185,12 +187,12 @@ export const getUserDetails = async (req, res) => {
         console.log("userId" , userId)
         const user = await User.findById(userId).select("-password"); 
         if (!user) {
-            return res.status(404).json({ success: false, message: "User not found" });
+            return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: MESSAGES.USER_NOT_FOUNT });
         }
         console.log("user" , user)
         res.json({ success: true, user });
     } catch (error) {
         console.error("Get User Details Error:", error);
-        res.status(500).json({ success: false, message: "Internal server error" });
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message:MESSAGES.INTERNAL_SERVER_ERROR });
     }
 };

@@ -3,6 +3,8 @@ import Category from '../models/Category.js'
 import User from '../models/User.js'
 import mongoose  from "mongoose";
 import { v2 as cloudinary } from "cloudinary";
+import STATUS_CODES from "../constants/statusCode.js";
+import MESSAGES from "../constants/messages.js";
 
 export const createArticle = async (req, res) => {
   try {
@@ -17,7 +19,7 @@ export const createArticle = async (req, res) => {
       }
 
       if (!req.files || req.files.length === 0) {
-          return res.status(400).json({ success: false, message: "No images uploaded" });
+          return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: MESSAGES.UPLOAD_ERROR  });
       }
 
   
@@ -31,8 +33,8 @@ export const createArticle = async (req, res) => {
               });
               uploadedImages.push(result.secure_url);
           } catch (uploadError) {
-              console.error(" Cloudinary Upload Error:", uploadError);
-              return res.status(500).json({ success: false, message: "Cloudinary upload failed", error: uploadError.message });
+              console.error(MESSAGES.CLOUDINARY_ERROR, uploadError);
+              return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: MESSAGES.CLOUDINARY_ERROR, error: uploadError.message });
           }
       }
 
@@ -55,7 +57,7 @@ export const createArticle = async (req, res) => {
       res.json({ success: true, article });
   } catch (error) {
       console.error(" Article Creation Error:", error);
-      res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+      res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: MESSAGES.INTERNAL_SERVER_ERROR, error: error.message });
   }
 };
 
@@ -63,10 +65,10 @@ export const createArticle = async (req, res) => {
     try {
       const categories = await Category.find().sort({ createdAt: -1 }); 
       console.log("cat" , categories)
-      res.json(categories);
+      res.status(STATUS_CODES.OK).json(categories);
     } catch (error) {
       console.error("Error fetching categories:", error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ message: MESSAGES.INTERNAL_SERVER_ERROR });
     }
   }
 
@@ -81,13 +83,13 @@ export const createArticle = async (req, res) => {
       const articles = await Article.find({ author: userId }).sort({ createdAt: -1 });
   
       if (!articles.length) {
-        return res.status(200).json({ message: "No articles found for this user." });
+        return res.status(STATUS_CODES.OK).json({ message:MESSAGES.ARTICLE_NOT_FOUNT  });
       }
       console.log("arti" , articles)
-      res.status(200).json({ articles });
+      res.status(STATUS_CODES.OK).json({ articles });
     } catch (error) {
       console.error("Error fetching articles:", error);
-      res.status(500).json({ message: "Internal Server Error" });
+      res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ message:MESSAGES.INTERNAL_SERVER_ERROR });
     }
   }
 
@@ -98,12 +100,12 @@ export const createArticle = async (req, res) => {
       const deletedArticle = await Article.findByIdAndDelete( articleId );
 
       if (!deletedArticle) {
-          return res.status(404).json({ success: false, message: "Article not found" });
+          return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, message: MESSAGES.ARTICLE_NOT_FOUNT });
       }
-      res.json({ success: true, message: "Article deleted successfully" });
+      res.json({ success: true, message: MESSAGES.DELETE_SUCCESSFULLY });
   } catch (error) {
       console.error("Error deleting article:", error);
-      res.status(500).json({ success: false, message: "Internal server error" });
+      res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: MESSAGES.INTERNAL_SERVER_ERROR });
   }
   }
 
@@ -126,7 +128,7 @@ export const createArticle = async (req, res) => {
                 parsedExistingImages = Array.isArray(existingImages) ? existingImages : JSON.parse(existingImages);
             } catch (err) {
                 console.error(" Error parsing existingImages:", err);
-                return res.status(400).json({ success: false, message: "Invalid image data" });
+                return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, message: MESSAGES.INVALID });
             }
         }
 
@@ -148,7 +150,7 @@ export const createArticle = async (req, res) => {
                 article.images.push(...uploadedImages);
             } catch (uploadError) {
                 console.error(" Cloudinary Upload Error:", uploadError);
-                return res.status(500).json({ success: false, message: "Image upload failed" });
+                return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message:MESSAGES.UPLOAD_ERROR });
             }
         }
         article.title = title;
@@ -162,7 +164,7 @@ export const createArticle = async (req, res) => {
         res.json({ success: true, article });
     } catch (error) {
         console.error(" Update Error:", error);
-        res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: MESSAGES.INTERNAL_SERVER_ERROR, error: error.message });
     }
 };
 
@@ -184,8 +186,7 @@ export const getDashboardArticles = async (req, res) => {
       if (!preferences || preferences.length === 0) {
         return res.json({ success: true, articles: [], totalPages: 0, currentPage: page });
       }
-  
-      // Build query for filtering
+
       const query = {
         category: { $in: preferences },
         blockBy: { $ne: userId },
@@ -196,12 +197,10 @@ export const getDashboardArticles = async (req, res) => {
           ],
         }),
       };
-  
-      // Get total number of articles
+
       const totalArticles = await Article.countDocuments(query);
       const totalPages = Math.ceil(totalArticles / limit);
-  
-      // Fetch paginated articles
+
       const articles = await Article.find(query)
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
@@ -217,7 +216,7 @@ export const getDashboardArticles = async (req, res) => {
   
     } catch (error) {
       console.error("Get Dashboard Articles Error:", error);
-      res.status(500).json({ success: false, message: "Internal server error" });
+      res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: MESSAGES.INTERNAL_SERVER_ERROR });
     }
   };
   
@@ -231,12 +230,12 @@ export const getDashboardArticles = async (req, res) => {
     const userId = req.user?.id; 
 
     if (!userId) {
-        return res.status(401).json({ message: "User not authenticated" });
+        return res.status(STATUS_CODES.UNAUTHORIZED).json({ message: MESSAGES.UNAUTHERIZED });
     }
 
     try {
         const article = await Article.findById(articleId);
-        if (!article) return res.status(404).json({ message: "Article not found" });
+        if (!article) return res.status(STATUS_CODES.NOT_FOUND).json({ message: MESSAGES.ARTICLE_NOT_FOUNT });
 
         if (!article.likedBy) article.likedBy = [];
         if (!article.dislikedBy) article.dislikedBy = [];
@@ -270,7 +269,7 @@ export const getDashboardArticles = async (req, res) => {
         res.json({ likes: article.likes, disLikes: article.disLikes });
 
     } catch (error) {
-        res.status(500).json({ message: "Error updating likes/dislikes", error });
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ message: MESSAGES.LIKE_ERROR, error });
     }
 };
 
@@ -280,18 +279,18 @@ export const blockArticle = async (req, res) => {
 
   try {
       const user = await User.findById(userId);
-      if (!user) return res.status(404).json({ message: "User not found" });
+      if (!user) return res.status(STATUS_CODES.NOT_FOUND).json({ message: MESSAGES.USER_NOT_FOUNT });
 
       const article = await Article.findById(articleId);
-      if (!article) return res.status(404).json({ message: "Article not found" });
+      if (!article) return res.status(STATUS_CODES.NOT_FOUND).json({ message: MESSAGES.ARTICLE_NOT_FOUNT });
       if (!article.blockBy.includes(userId)) {
           article.blockBy.push(userId);
           await article.save();
       }
 
-      res.json({ message: "Article blocked successfully", blockBy: article.blockBy });
+      res.json({ message: MESSAGES.BLOCKED, blockBy: article.blockBy });
   } catch (error) {
-      res.status(500).json({ message: "Error blocking article", error: error.message });
+      res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ message: MESSAGES.BLOCK_ERROR, error: error.message });
   }
 };
 
