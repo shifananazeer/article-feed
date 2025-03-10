@@ -181,6 +181,49 @@ const Dashboard = () => {
           </div>
         ))}
       </div>
+
+
+       {/* Modal Component */}
+          {showModal && selectedArticle && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+                <div className="bg-white p-6 rounded-lg shadow-lg w-3/4 md:w-1/2 lg:w-1/3">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-semibold">{selectedArticle.title}</h2>
+                    <button onClick={closeModal}>
+                      <XCircle size={24} className="text-gray-500 hover:text-red-500" />
+                    </button>
+                  </div>
+                    
+                      {selectedArticle.images?.length > 0 && (
+                    <Swiper
+                      modules={[Navigation, Pagination]}
+                      navigation
+                      pagination={{ clickable: true }}
+                      className="w-full h-64 rounded-lg"
+                    >
+                      {selectedArticle.images.map((image, index) => (
+                        <SwiperSlide key={index}>
+                          <img
+                             src={image} 
+                            alt={`Slide ${index + 1}`}
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                        </SwiperSlide>
+                      ))}
+                    </Swiper>
+                  )}
+      
+                  <p className="text-gray-700 mt-3">{selectedArticle.description}</p>
+                  <p className="text-gray-500 text-xs mt-1">Category: {selectedArticle.category}</p>
+                  <button
+                    className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300 w-full"
+                    onClick={closeModal}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
       
       {/* Pagination */}
       <div className="mt-10 flex justify-center">
